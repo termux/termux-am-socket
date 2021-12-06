@@ -11,10 +11,6 @@
 #include <errno.h>
 
 
-#ifndef PREFIX
-#define PREFIX "/data/data/com.termux/files/usr"
-#endif
-
 
 #define SOCKET_PATH PREFIX"/../am-socket"
 
