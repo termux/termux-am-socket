@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(termux-am-2)
+project(termux-am-socket)
 
 
 if (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
