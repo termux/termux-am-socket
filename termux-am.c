@@ -19,7 +19,7 @@
 
 
 
-void send_blocking(const int fd, const void* data, int len) {
+void send_blocking(const int fd, const char* data, int len) {
     while (len > 0) {
         int ret = send(fd, data, len, MSG_NOSIGNAL);
         if (ret == -1) {
@@ -36,7 +36,7 @@ bool recv_part(const int fd, char* data, int len) {
     while (len > 0) {
         int ret = recv(fd, data, 1, 0);
         if (ret == -1) {
-            perror("Socket write error");
+            perror("Socket read error");
             exit(1);
         }
         if (*data == '\0' || ret == 0) {
@@ -68,10 +68,10 @@ int main(int argc, char* argv[]) {
     }
     
     for (int i = 1; i<argc; i++) {
-        send_blocking(fd, QUOTE, sizeof(QUOTE));
+        send_blocking(fd, QUOTE, sizeof(QUOTE)-1);
         send_blocking(fd, argv[i], strlen(argv[i]));
-        send_blocking(fd, QUOTE, sizeof(QUOTE));
-        send_blocking(fd, SPACE, sizeof(SPACE));
+        send_blocking(fd, QUOTE, sizeof(QUOTE)-1);
+        send_blocking(fd, SPACE, sizeof(SPACE)-1);
     }
     shutdown(fd, SHUT_WR);
     
