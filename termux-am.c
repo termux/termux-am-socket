@@ -12,7 +12,7 @@
 
 
 
-#define SOCKET_PATH PREFIX"/../am-socket"
+#define SOCKET_PATH PREFIX"/var/run/am-socket"
 
 #define QUOTE "\""
 #define SPACE " "
