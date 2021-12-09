@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
         close(fd);
         return 1;
     }
-    
+
     for (int i = 1; i<argc; i++) {
         send_blocking(fd, QUOTE, sizeof(QUOTE)-1);
         send_blocking(fd, argv[i], strlen(argv[i]));
@@ -72,9 +72,9 @@ int main(int argc, char* argv[]) {
         send_blocking(fd, SPACE, sizeof(SPACE)-1);
     }
     shutdown(fd, SHUT_WR);
-    
+
     int exit_code;
-    
+
     {
         char tmp[10];
         memset(tmp, '\0', sizeof(tmp));
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
     }
-    
+
     {
         char tmp[4096];
         bool ret;
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
             fputs(tmp, stdout);
         } while (! ret);
     }
-    
+
     {
         char tmp[4096];
         bool ret;
@@ -109,6 +109,6 @@ int main(int argc, char* argv[]) {
             fputs(tmp, stderr);
         } while (! ret);
     }
-    
+
     return exit_code;
 }
