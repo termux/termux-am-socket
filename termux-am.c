@@ -10,9 +10,7 @@
 #include <string.h>
 #include <errno.h>
 
-
-
-#define SOCKET_PATH PREFIX"/var/run/am-socket"
+#include "termux-am.h"
 
 #define QUOTE "\""
 #define SPACE " "
