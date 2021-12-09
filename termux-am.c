@@ -1,14 +1,12 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-
+#include <errno.h>
 #include <stdbool.h>
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 #include "termux-am.h"
 
