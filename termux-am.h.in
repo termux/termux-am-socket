@@ -1,1 +1,1 @@
-#define SOCKET_PATH "@TERMUX_PREFIX@/../sockets/am-socket"
+#define SOCKET_PATH "@TERMUX_PREFIX@/../api/am-socket"
