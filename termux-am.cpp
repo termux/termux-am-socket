@@ -101,13 +101,15 @@ int main(int argc, char* argv[]) {
         memset(tmp, '\0', sizeof(tmp));
         if (! recv_part(fd, tmp, sizeof(tmp)-1)) {
             fputs("Exit code too long", stderr);
-            exit(1);
+            close(fd);
+            return 1;
         }
         errno = 0;
         exit_code = strtol(tmp, NULL, 10);
         if (errno != 0) {
             perror("Exit code not a valid number");
-            exit(1);
+            close(fd);
+            return 1;
         }
     }
 
@@ -130,6 +132,8 @@ int main(int argc, char* argv[]) {
             fputs(tmp, stderr);
         } while (!ret);
     }
+
+    close(fd);
 
     return exit_code;
 }
