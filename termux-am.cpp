@@ -15,22 +15,26 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <cstdbool>
+#include <cstdio>
+#include <cstdlib>
 #include <errno.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string>
+#include <unistd.h>
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
-#include <unistd.h>
-
-#include "termux-am.h"
 
 #define QUOTE "\""
 #define SPACE " "
 
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <array>
 
+#include "termux-am.h"
 
 void send_blocking(const int fd, const char* data, int len) {
     while (len > 0) {
@@ -65,14 +69,16 @@ bool recv_part(const int fd, char* data, int len) {
 int main(int argc, char* argv[]) {
     struct sockaddr_un adr = {.sun_family = AF_UNIX};
     if (strlen(SOCKET_PATH) >= sizeof(adr.sun_path)) {
-        fputs( "Socket path too long.", stderr);
+        std::cerr << "Socket path \"" << SOCKET_PATH << "\" too long" << std::endl;
         return 1;
     }
+
     const int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd == -1) {
         perror("Could not create socket");
         return 1;
     }
+
     strncpy(adr.sun_path, SOCKET_PATH, sizeof(adr.sun_path)-1);
     if (connect(fd, (struct sockaddr*) &adr, sizeof(adr)) == -1) {
         perror("Could not connect to socket");
@@ -112,7 +118,7 @@ int main(int argc, char* argv[]) {
             memset(tmp, '\0', sizeof(tmp));
             ret = recv_part(fd, tmp, sizeof(tmp)-1);
             fputs(tmp, stdout);
-        } while (! ret);
+        } while (!ret);
     }
 
     {
@@ -122,7 +128,7 @@ int main(int argc, char* argv[]) {
             memset(tmp, '\0', sizeof(tmp));
             ret = recv_part(fd, tmp, sizeof(tmp)-1);
             fputs(tmp, stderr);
-        } while (! ret);
+        } while (!ret);
     }
 
     return exit_code;

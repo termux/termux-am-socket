@@ -13,7 +13,7 @@ configure_file(
     termux-am.h @ONLY
 )
 
-add_executable(termux-am termux-am.c)
+add_executable(termux-am termux-am.cpp)
 target_include_directories(termux-am PUBLIC ${CMAKE_BINARY_DIR})
 
 install(TARGETS termux-am DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
