@@ -65,6 +65,11 @@ bool recv_part(const int fd, char* data, int len) {
     return false;
 }
 
+bool is_number(const std::string& s) {
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
 
 int main(int argc, char* argv[]) {
     struct sockaddr_un adr = {.sun_family = AF_UNIX};
@@ -99,15 +104,28 @@ int main(int argc, char* argv[]) {
     {
         char tmp[10];
         memset(tmp, '\0', sizeof(tmp));
-        if (! recv_part(fd, tmp, sizeof(tmp)-1)) {
-            fputs("Exit code too long", stderr);
+        if (!recv_part(fd, tmp, sizeof(tmp) - 1)) {
+            std::string errmsg = "Exit code \"" + std::string(tmp) + "\" is too long. It must be valid number between 0-255";
+            if (errno == 0)
+                std::cerr << errmsg << std::endl;
+            else
+                perror(errmsg.c_str());
             close(fd);
             return 1;
         }
+
+        // strtol returns 0 if conversion failed and allows leading whitespaces
         errno = 0;
         exit_code = strtol(tmp, NULL, 10);
-        if (errno != 0) {
-            perror("Exit code not a valid number");
+        if (!is_number(std::string(tmp)) || (exit_code == 0 && std::string(tmp) != "0")) {
+            std::cerr << "Exit code \"" + std::string(tmp) + "\" is not a valid number between 0-255" << std::endl;
+            close(fd);
+            return 1;
+        }
+
+        // Out of bound exit codes would return with exit code `44` `Channel number out of range`.
+        if (exit_code < 0 || exit_code > 255) {
+            std::cerr << "Exit code \"" << std::string(tmp) << "\" is not a valid exit code between 0-255" << std::endl;
             close(fd);
             return 1;
         }
