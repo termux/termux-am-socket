@@ -1,0 +1,149 @@
+#!@TERMUX_PREFIX@/bin/bash
+# shellcheck disable=SC2039,SC2059
+version=1.02
+
+
+COMMAND_TYPE="am_command_run" # Default to "am_command_run"
+NOOP_COMMAND=0 # Default to 0
+
+
+##
+# main `[argument...]`
+##
+main() {
+
+    # Process the command arguments passed to termux-am if arguments received
+    if [ $# -ne 0 ]; then
+        process_arguments "$@" || return $?
+
+        [ "$NOOP_COMMAND" = "1" ] && return 0
+    else
+        show_help || return $?
+        return 0
+    fi
+
+    # TERMUX_APP_AM_SOCKET_SERVER_ENABLED=false is exported by termux-app
+    # if server is disabled, so don't try to connect to server if its
+    # disabled and save a few milliseconds and also warn user.
+    if [[ "$TERMUX_APP_AM_SOCKET_SERVER_ENABLED" == "false" ]]; then
+        echo "TermuxAm server is not enabled. Make sure \"run-termux-am-socket-server=false\" is not added to the \"~/.termux/termux.properties\" file" 1>&2
+        return 1;
+    fi
+
+    local am_command_string
+
+    if [[ "$COMMAND_TYPE" == "am_command_run" ]]; then
+        if [ $# -ne 0 ]; then
+            # Converts arguments array to a single string that can be reused as shell input
+            # https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#printf
+            # https://github.com/bminor/bash/blob/bash-5.1/builtins/printf.def#L575
+            # https://github.com/bminor/bash/blob/bash-5.1/lib/sh/strtrans.c
+            # https://github.com/bminor/bash/blob/bash-5.1/lib/sh/shquote.c
+            printf -v "am_command_string" "%q " "$@" || return $?
+        fi
+    elif [[ "$COMMAND_TYPE" == "am_command_help" ]]; then
+        : # Do not pass any arguments so that 'am --help' is returned by server
+    else
+        echo "Invalid COMMAND_TYPE \"$COMMAND_TYPE\" set" 1>&2
+        return 1
+    fi
+
+    termux-am-socket "$am_command_string"
+
+}
+
+##
+# process_arguments `[argument...]`
+##
+process_arguments() {
+
+    local opt; local arg; local OPTARG; local OPTIND
+
+    # Parse options to termux-am command
+    while getopts ":h-:" opt; do
+        case "${opt}" in
+            -)
+                arg="${OPTARG#*=}"
+                case "${OPTARG}" in
+                    am-help)
+                        COMMAND_TYPE="am_command_help"
+                        ;;
+                    help)
+                        show_help
+                        NOOP_COMMAND=1; return 0
+                        ;;
+                    version)
+                        echo "$version"
+                        NOOP_COMMAND=1; return 0
+                        ;;
+                    *)
+                        :;;
+                esac
+                ;;
+            h)
+                show_help
+                NOOP_COMMAND=1; return 0
+                ;;
+            \?)
+                :;;
+        esac
+    done
+    shift $((OPTIND - 1)) # Remove already processed arguments from argument list
+
+    return 0;
+
+}
+
+##
+# show_help
+##
+show_help() {
+
+    cat <<'HELP_EOF'
+
+termux-am is a wrapper script that converts the arguments array
+passed to a single string that can be reused as shell input with the
+bash 'printf "%q"' built-in and passes the string to termux-am-socket.
+
+
+Usage:
+  termux-am [command_options]
+
+
+Available command_options:
+  [ -h | --help ]    Display termux-am help screen.
+  [ --am-help ]      Display am command help screen.
+  [ --version ]      Display version.
+
+
+termux-am-socket sends the converted string to
+"@TERMUX_PREFIX@/../apps/termux-app/termux-am/am.sock"
+local unix socket server that is run by termux-app if enabled, which
+executes it as an android activity manager (am) command from within
+termux-app java process via termux/termux-am-library.
+
+The termux-am provides similar functionality to "$PREFIX/bin/am"
+(and "/system/bin/am"), but should be faster since it does not
+require starting a dalvik vm for every command as done by "am" via
+termux/TermuxAm.
+
+The server normally only allows termux-app user and root user to
+connect to it. If you run termux-am with root, then the am commands
+executed will be run as the termux user and its permissions,
+capabilities and selinux context instead of root.
+
+The server is enabled by default and can be disabled by adding
+"run-termux-am-socket-server=false" to the
+"~/.termux/termux.properties"
+file. Changes require termux-app to be force stopped and restarted.
+
+The current state of the server can be checked with the
+TERMUX_APP_AM_SOCKET_SERVER_ENABLED env variable.
+
+HELP_EOF
+
+echo "TERMUX_APP_AM_SOCKET_SERVER_ENABLED=$TERMUX_APP_AM_SOCKET_SERVER_ENABLED"
+
+}
+
+main "$@"

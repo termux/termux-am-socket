@@ -26,9 +26,6 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-#define QUOTE "\""
-#define SPACE " "
-
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -71,7 +68,13 @@ bool is_number(const std::string& s) {
     return !s.empty() && it == s.end();
 }
 
+
 int main(int argc, char* argv[]) {
+    if (argc > 2) {
+        std::cerr << "termux-am-socket only expects 1 argument and received " << argc - 1 << std::endl;
+        return 1;
+    }
+
     struct sockaddr_un adr = {.sun_family = AF_UNIX};
     if (strlen(SOCKET_PATH) >= sizeof(adr.sun_path)) {
         std::cerr << "Socket path \"" << SOCKET_PATH << "\" too long" << std::endl;
@@ -91,12 +94,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    for (int i = 1; i<argc; i++) {
-        send_blocking(fd, QUOTE, sizeof(QUOTE)-1);
-        send_blocking(fd, argv[i], strlen(argv[i]));
-        send_blocking(fd, QUOTE, sizeof(QUOTE)-1);
-        send_blocking(fd, SPACE, sizeof(SPACE)-1);
-    }
+    if (argc == 2) {
+        send_blocking(fd, argv[1], strlen(argv[1]));
+    } 
+
     shutdown(fd, SHUT_WR);
 
     int exit_code;
