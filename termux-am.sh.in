@@ -1,6 +1,6 @@
 #!@TERMUX_PREFIX@/bin/bash
 # shellcheck disable=SC2039,SC2059
-version=1.02
+version=1.3.0
 
 
 COMMAND_TYPE="am_command_run" # Default to "am_command_run"
