@@ -15,4 +15,4 @@
  *    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define SOCKET_PATH "@TERMUX_PREFIX@/../apps/termux-app/termux-am/am.sock"
+#define SOCKET_PATH "@TERMUX_APPS_DIR@/@TERMUX_APP_PACKAGE@/termux-am/am.sock"
