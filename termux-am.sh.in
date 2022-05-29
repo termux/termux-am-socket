@@ -1,6 +1,6 @@
 #!@TERMUX_PREFIX@/bin/bash
 # shellcheck disable=SC2039,SC2059
-version=1.3.0
+TERMUX_AM_SOCKET_VERSION=1.3.0
 
 
 COMMAND_TYPE="am_command_run" # Default to "am_command_run"
@@ -73,7 +73,7 @@ process_arguments() {
                         NOOP_COMMAND=1; return 0
                         ;;
                     version)
-                        echo "$version"
+                        echo "$TERMUX_AM_SOCKET_VERSION"
                         NOOP_COMMAND=1; return 0
                         ;;
                     *)
