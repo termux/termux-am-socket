@@ -22,10 +22,10 @@ main() {
         return 0
     fi
 
-    # TERMUX_APP_AM_SOCKET_SERVER_ENABLED=false is exported by termux-app
+    # TERMUX_APP__AM_SOCKET_SERVER_ENABLED=false is exported by termux-app
     # if server is disabled, so don't try to connect to server if its
     # disabled and save a few milliseconds and also warn user.
-    if [[ "$TERMUX_APP_AM_SOCKET_SERVER_ENABLED" == "false" ]]; then
+    if [[ "$TERMUX_APP__AM_SOCKET_SERVER_ENABLED" == "false" ]]; then
         echo "TermuxAm server is not enabled. Make sure \"run-termux-am-socket-server=false\" is not added to the \"~/.termux/termux.properties\" file" 1>&2
         return 1;
     fi
@@ -138,11 +138,11 @@ The server is enabled by default and can be disabled by adding
 file. Changes require termux-app to be force stopped and restarted.
 
 The current state of the server can be checked with the
-TERMUX_APP_AM_SOCKET_SERVER_ENABLED env variable.
+TERMUX_APP__AM_SOCKET_SERVER_ENABLED env variable.
 
 HELP_EOF
 
-echo "TERMUX_APP_AM_SOCKET_SERVER_ENABLED=$TERMUX_APP_AM_SOCKET_SERVER_ENABLED"
+echo "TERMUX_APP__AM_SOCKET_SERVER_ENABLED=$TERMUX_APP__AM_SOCKET_SERVER_ENABLED"
 
 }
 
