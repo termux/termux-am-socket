@@ -173,7 +173,7 @@ std::string handle_args(int argc, char* argv[]) {
         args += quote_string(argv[i]);
         args += " ";
     }
-    std::cout << args << std::endl;
+    //std::cout << args << std::endl;
     return args;
 }
 
