@@ -146,7 +146,7 @@ std::string handle_args(int argc, char* argv[]) {
         }
     };
     while (true) {
-        int ret = getopt_long(argc, argv, "h", longopts, NULL);
+        int ret = getopt_long(argc, argv, "+h", longopts, NULL);
         // end of arguments
         if (ret == -1) break;
         // error is denoted by '?'
@@ -173,6 +173,7 @@ std::string handle_args(int argc, char* argv[]) {
         args += quote_string(argv[i]);
         args += " ";
     }
+    std::cout << args << std::endl;
     return args;
 }
 
