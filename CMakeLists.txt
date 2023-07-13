@@ -13,14 +13,9 @@ configure_file(
     termux-am.h @ONLY
 )
 
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/termux-am.sh.in
-  termux-am @ONLY
-)
 
-add_executable(termux-am-socket termux-am.cpp)
-target_include_directories(termux-am-socket PUBLIC ${CMAKE_BINARY_DIR})
+add_executable(termux-am termux-am.cpp)
+target_include_directories(termux-am PUBLIC ${CMAKE_BINARY_DIR})
 
 
-install(FILES ${CMAKE_BINARY_DIR}/termux-am TYPE BIN PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
-install(TARGETS termux-am-socket DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+install(TARGETS termux-am DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)

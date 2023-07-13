@@ -18,9 +18,10 @@
 #include <cstdbool>
 #include <cstdio>
 #include <cstdlib>
+
 #include <errno.h>
-#include <string>
 #include <unistd.h>
+#include <getopt.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -30,6 +31,8 @@
 #include <memory>
 #include <stdexcept>
 #include <array>
+#include <string>
+#include <regex>
 
 #include "termux-am.h"
 
@@ -68,12 +71,119 @@ bool is_number(const std::string& s) {
     return !s.empty() && it == s.end();
 }
 
+/**
+ * Returns a quoted string.
+ * Escapes double quotes and backslashes, if a double quote or backslash is present.
+ * Encloses in double quotes if whitespace is present.
+ * This is enough for the tokenizer implementation used in the am server.
+ */
+std::string quote_string(std::string raw) {
+    bool whitespace = false;
+    std::string processed;
+    // account some quoted characters
+    processed.reserve(raw.size() + 20);
+    for (char c : raw) {
+        if (isspace(c)) whitespace = true;
+        switch (c) {
+            case '"':
+                // replace double quotes with escaped double quotes
+                processed.push_back('\\');
+                processed.push_back('"');
+                break;
+            case '\\':
+                // double all backslashes
+                processed.push_back(c);
+            default:
+                processed.push_back(c);
+        }
+    }
+    if (whitespace) {
+        processed = "\"" + processed + "\"";
+    }
+    return processed;
+}
+
+void print_help() {
+    std::cout << help_text;
+    const char* server_enabled = getenv("TERMUX_APP__AM_SOCKET_SERVER_ENABLED");
+    if (server_enabled != NULL) {
+        std::cout << "TERMUX_APP__AM_SOCKET_SERVER_ENABLED=" << server_enabled;
+    } else {
+        std::cout << "TERMUX_APP__AM_SOCKET_SERVER_ENABLED undefined";
+    }
+    std::cout << std::endl;
+}
+
+/**
+ * Handles command line arguments. Returns the correctly escaped am command arguments string if no option caused the program to quit.
+ * 
+ */
+std::string handle_args(int argc, char* argv[]) {
+    const option longopts[] = {
+        option {
+            .name = "help",
+            .has_arg = no_argument,
+            .flag = NULL,
+            .val = 'h'
+        },
+        option {
+            .name = "am-help",
+            .has_arg = no_argument,
+            .flag = NULL,
+            .val = 'H'
+        },
+        option {
+            .name = "version",
+            .has_arg = no_argument,
+            .flag = NULL,
+            .val = 'V'
+        },
+        option {
+            .name = 0,
+            .has_arg = 0,
+            .flag = 0,
+            .val = 0
+        }
+    };
+    while (true) {
+        int ret = getopt_long(argc, argv, "h", longopts, NULL);
+        // end of arguments
+        if (ret == -1) break;
+        // error is denoted by '?'
+        if (ret == '?') {
+            print_help();
+            exit(1);
+        }
+        if (ret == 'V') {
+            std::cout << TERMUX_AM_VERSION << std::endl;
+            exit(0);
+        }
+        // print local help
+        if (ret == 'h') {
+            print_help();
+            exit(0);
+        }
+        // print server help
+        if (ret == 'H') {
+            return "";
+        }
+    }
+    std::string args;
+    for (int i = optind; i < argc; i++) {
+        args += quote_string(argv[i]);
+        args += " ";
+    }
+    return args;
+}
+
 
 int main(int argc, char* argv[]) {
-    if (argc > 2) {
-        std::cerr << "termux-am-socket only expects 1 argument and received " << argc - 1 << std::endl;
-        return 1;
+    // print program help if no argument is specified
+    if (argc == 1) {
+        print_help();
+        exit(1);
     }
+    std::string args = handle_args(argc, argv);
 
     struct sockaddr_un adr = {.sun_family = AF_UNIX};
     if (strlen(SOCKET_PATH) >= sizeof(adr.sun_path)) {
@@ -94,9 +204,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (argc == 2) {
-        send_blocking(fd, argv[1], strlen(argv[1]));
-    } 
+    send_blocking(fd, args.data(), args.size());
 
     shutdown(fd, SHUT_WR);
 
