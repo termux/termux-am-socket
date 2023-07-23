@@ -73,7 +73,7 @@ bool is_number(const std::string& s) {
 
 /**
  * Returns a quoted string.
- * Escapes double quotes and backslashes, if a double quote or backslash is present.
+ * Escapes quotes and backslashes, if a quote or backslash is present.
  * Encloses in double quotes if whitespace is present.
  * This is enough for the tokenizer implementation used in the am server.
  */
@@ -89,6 +89,11 @@ std::string quote_string(std::string raw) {
                 // replace double quotes with escaped double quotes
                 processed.push_back('\\');
                 processed.push_back('"');
+                break;
+            case '\'':
+                // replace single quotes with escaped single quotes
+                processed.push_back('\\');
+                processed.push_back('\'');
                 break;
             case '\\':
                 // double all backslashes
