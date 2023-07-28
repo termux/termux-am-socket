@@ -73,9 +73,6 @@ bool is_number(const std::string& s) {
 
 /**
  * Returns a quoted string.
- * Escapes quotes and backslashes, if a quote or backslash is present.
- * Encloses in double quotes if whitespace is present.
- * This is enough for the tokenizer implementation used in the am server.
  */
 std::string quote_string(std::string raw) {
     bool whitespace = false;
@@ -83,7 +80,12 @@ std::string quote_string(std::string raw) {
     // account some quoted characters
     processed.reserve(raw.size() + 20);
     for (char c : raw) {
-        if (isspace(c)) whitespace = true;
+        if (isspace(c)) {
+            whitespace = true;
+            break;
+        }
+    }
+    for (char c : raw) {
         switch (c) {
             case '"':
                 // replace double quotes with escaped double quotes
@@ -91,8 +93,9 @@ std::string quote_string(std::string raw) {
                 processed.push_back('"');
                 break;
             case '\'':
-                // replace single quotes with escaped single quotes
-                processed.push_back('\\');
+                // replace single quotes with escaped single quotes, if not in double quotes
+                if (! whitespace)
+                    processed.push_back('\\');
                 processed.push_back('\'');
                 break;
             case '\\':
@@ -151,6 +154,7 @@ std::string handle_args(int argc, char* argv[]) {
         }
     };
     while (true) {
+        // "+" makes it stop when an unrecognized option is encountered, so the rest of the options go to the am-server as-is.
         int ret = getopt_long(argc, argv, "+h", longopts, NULL);
         // end of arguments
         if (ret == -1) break;
@@ -187,9 +191,18 @@ int main(int argc, char* argv[]) {
     // print program help if no argument is specified
     if (argc == 1) {
         print_help();
-        exit(1);
+        exit(0);
     }
     std::string args = handle_args(argc, argv);
+    // comment in to test argument quoting
+    // std::cout << "\"" << args << "\"" << std::endl;
+    // exit(0);
+    
+    const char* server_enabled = getenv("TERMUX_APP__AM_SOCKET_SERVER_ENABLED");
+    if (server_enabled != NULL && std::string("false") == server_enabled) {
+        std::cerr << "TermuxAm server is not enabled. Make sure \"run-termux-am-socket-server=false\" is not added to the \"~/.termux/termux.properties\" file" << std::endl;
+        exit(1);
+    }
 
     struct sockaddr_un adr = {.sun_family = AF_UNIX};
     if (strlen(SOCKET_PATH) >= sizeof(adr.sun_path)) {
